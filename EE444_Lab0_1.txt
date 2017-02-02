@@ -1,0 +1,31 @@
+#include <msp430.h>
+
+void main(void)
+{
+  int i;
+
+  // Set MCLK to 4 MHz
+  // MCLK = 32x1024
+  // FLLN = 4,000,000 / MCLK = 122.0703125 ~ 122
+
+  //UCSCTL6 |= XT1BYPASS; // XTIBYPASS = 1 = XIN = 32x1024 = 32768 Hz
+
+  //UCSCTL3 |= ~SELREF2 + ~SELREF1 + ~SELREF0; //SELREF = 000 = XT1CLK = 32768 Hz
+ 
+  UCSCTL2 = 121; // FLLN = 0001111010 = 122 = 3994696 Hz
+
+  UCSCTL4 |= SELM__DCOCLK + SELS__DCOCLK + SELA__XT1CLK; // SELM = 100 = DCOCLKDIV = 3997696 Hz
+  
+
+  // Port 2 output MCLK on TP10
+  P11DIR |= BIT1; // MCLK out of P11.1
+  P11SEL |= BIT1; // MCLK out of P11.1
+  
+  // Blink LEDs forever
+  P1DIR |= BIT0 + BIT1;
+  P1OUT |= BIT0 + ~BIT1;
+  while(1) {
+    P1OUT ^= BIT0 + BIT1;
+    for (i=0; i<30000; i++);
+  }
+}
