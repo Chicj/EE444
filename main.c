@@ -1,12 +1,20 @@
 #include <msp430.h>
+<<<<<<< HEAD
 //#include "ChangeVcore.h" 
+=======
+#include "ChangeVcore.h" 
+>>>>>>> 97b992404a296c80bccee1f9b1219263972fa97d
 
 
 unsigned int time; // button push time for part 2
 
 void main(void)
 {  
+<<<<<<< HEAD
 /*
+=======
+
+>>>>>>> 97b992404a296c80bccee1f9b1219263972fa97d
 // PART one of lab
   // set MCLK to 25 MHz (default SELREF for FLLREFCLK is XT1CLK = 32*1024 = 32768 Hz = 32.768 KHz)
   UCSCTL2 = 762; // Setting the freq multiplication factor * 1024
@@ -26,6 +34,7 @@ void main(void)
   DecrementVcore();
   DecrementVcore();
   DecrementVcore(); //note: powering down Vcore to PMMCOREV = 01 does not kill the clock .... this is troublsome 
+<<<<<<< HEAD
 */
 // Part two of lab
 
@@ -34,6 +43,14 @@ void main(void)
    P1IE  |= BIT6; //Enable IR on P2.6
 
 
+=======
+
+// Part two of lab
+
+  //setting up pins for SW1 --> P2.6
+  P2IE  |= BIT6; //Enable IR on P2.6
+
+>>>>>>> 97b992404a296c80bccee1f9b1219263972fa97d
   // Divide ACLK
   UCSCTL5 |=  DIVA__32; // slow down the clock to allow for lots of time betwn buttn pushes ACLK = 32.768 KHz /32
 
@@ -46,6 +63,7 @@ void main(void)
             
  _EINT();
   LPM0;
+<<<<<<< HEAD
 }
 /*
 void Button_IR(void) __interrupt[PORT2_VECTOR]{
@@ -92,5 +110,20 @@ void Button_IR(void) __interrupt[PORT1_VECTOR]{
         P7OUT ^= BIT7;
       break;
     }
+=======
+>>>>>>> 97b992404a296c80bccee1f9b1219263972fa97d
 }
+
+void Button_IR(void) __interrupt[PORT2_VECTOR]{
+        switch(P2IV)
+        {
+          case P2IV_P2IFG6: // check button flag
+            TA0CCTL0 ^= CCIS0;
+            if(TA0CCTL0 != 0x0342){ // dont set if TA0CCTL0  is defalt val
+              time=TA0CCTL0; // save time val
+            }
+          break;       
+        }
+}
+
 
