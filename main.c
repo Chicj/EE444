@@ -29,20 +29,22 @@ void main(void)
   P7SEL |= BIT3;  // set up P7.3 as an Output mode 
 
   // disable SMCLK requests
-  //UCSCTL8 |= ~SMCLKREQEN;
+  UCSCTL8 |= ~SMCLKREQEN;
 
   // Set up TA0
   TA1CTL |= TASSEL__SMCLK + MC__UPDOWN; // sets Timer_A to use SMCLK default /Set Mode Control to up/down mode
   
-  TA1CCTL0  |= OUTMOD_1;  // Set CCR0 to something is this needed
   TA1CCTL1  |= OUTMOD_4; // set enable IR / set output mode to "Toggle"
   TA1CCTL2  |= OUTMOD_4; // set enable IR / set output mode to "Toggle"
   
   //  TAxCCRn = Content of capture/compare register n will set the count up to val
   TA1CCR0 = 125; // set count up val 
-  TA1CCR1 = 90;   // P8.5
-  TA1CCR2 = 35;  //P7.3
-            
-  while(1);
+  TA1CCR1 = 94;   //P8.6  75%
+  TA1CCR2 = 32;   //P7.3  25%
+
+  // Diff loops for testing SMCLK system response   
+  // while(1);  // SMCLK and MCLK both on   
+  LPM0;        //  SMCLK still on MCLK off
+  //LPM3;      // SMCLK and MCLK off
 }
 
