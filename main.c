@@ -2,7 +2,8 @@
 #include "hal_lcd.h"
 
 unsigned int ADC12_15V_30; //30 C temp reff look @ pg 92 datasheet 
-unsigned in ADC12_15V_85; //85 C temp reff
+unsigned int ADC12_15V_85; //85 C temp reff
+volatile unsigned int *sample;
 
 void main(void)
 {
@@ -52,24 +53,29 @@ IncrementVcore();  // ensure operation in PMM lvl 2 in in order to run 16 MHz cl
   REFCTL0 |= REFON + REFOUT ;  // Ref available externally,Enable reference in ADC,
 // change REFVSEL as needed. default 1.5V
 
-  ADC12CTL0 |= ADC12ON + 0xF00 + ADC12REFON;  // turn on ADC,set sample hold time to 1024,REF on
-    
-  ADC12CTL1 |= ADC12SREF1; // set ref bounds Vr+ and Vr- 
+  //ADC12CTL0 |= ADC12ON + ADC12SHT0_15 + ADC12REFON;  // turn on ADC,set sample hold time to 1024,REF on
+  ADC12CTL0 |= ADC12SHT0_10 + ADC12ON + ADC12OVIE + ADC12TOVIE;
 
-  ADC12IE |= ADC12IE0; // enable mem1
+  //ADC12CTL1 |= ADC12SREF1 + ADC12SSEL_3; // set ref bounds Vr+ and Vr- , use SMCLK
+  ADC12CTL1 |= ADC12SHP + ADC12SSEL_3 + ADC12CONSEQ_0;
 
-  ADC12MCTL1 |= ADC12INCH_10;  // set temp as ADC input
+  ADC12IE |= ADC12IE0; // enable IR after conversion is done for mem0
 
-  ADC12CTL0 |= ADC12ENC;  // enable conversion 
+
+  ADC12MCTL0 |= ADC12INCH_10 + ADC12EOS;  // set temp as ADC input for mem0
 
   // Lock ADC after we are done writing things 
   _EINT();  // set global IR enable 
-  while(1);
+  while(1){
+   sample = &ADC12MEM0; // save data
+   ADC12CTL0 |= ~ADC12ENC;
+  }
 }
+
+
 
 //button IR code
 void Button_IR(void) __interrupt[PORT2_VECTOR]{
-int sample;
         switch(P2IV)
         {
           case P2IV_NONE: 
@@ -88,13 +94,10 @@ int sample;
           break; 
           case P2IV_P2IFG6: // check button flag, SW1 on breakout board
             P1DIR ^= BIT0;  // toggle LED when button push
-              while(1);
-              { 
-                ADC12CTL0 |= ADC12SC; //  start conversion
-                sample = ADC12MEM1; // save data
-                 __bis_SR_register(LPM0_bits);  // GIE is redundant here
+
+                ADC12CTL0 ^= ADC12ENC + ADC12SC;  // enable conversion,start conversion
                 __no_operation(); // for debug 
-              }
+              
           break; 
           case P2IV_P2IFG7:// check button , SW2 on breakout board
                P1DIR ^= BIT1;  // toggle LED when button push
@@ -106,52 +109,39 @@ int sample;
 void ADC12_IR(void) __interrupt[ADC12_VECTOR]{
         switch(ADC12IV)
         {
-          case ADC12IFG0: 
+          case ADC12IV_NONE: // ADC12IFGx flags are not reset by an ADC12IV access
           break;
-          case ADC12IFG1: // handle ADC conversion look at how these flags clear
-            //sample[0] = *ADC12MEM1;
+          case ADC12IV_ADC12TOVIFG: // handle ADC conversion look at how these flags clear
           break;
-          case ADC12IFG2: 
-
+          case 6://ADC12IV_ADC12IFG0: 
+            sample = &ADC12MEM0; // save data
+            ADC12CTL0 |= ~ADC12ENC;
           break;
-          case ADC12IFG3: 
-
+          case ADC12IV_ADC12IFG1: 
           break;
-          case ADC12IFG4: 
-
+          case ADC12IV_ADC12IFG2: 
           break;
-          case ADC12IFG5: 
-
+          case ADC12IV_ADC12IFG3: 
           break;
-          case ADC12IFG6: 
-
+          case ADC12IV_ADC12IFG4: 
           break;
-          case ADC12IFG7: // check button flag
-
+          case ADC12IV_ADC12IFG5: 
           break;
-          case ADC12IFG8: // check button flag
-
+          case ADC12IV_ADC12IFG6: 
           break;
-          case ADC12IFG9: // check button flag
-
+          case ADC12IV_ADC12IFG7:
           break;
-          case ADC12IFG10: // check button flag
-
+          case ADC12IV_ADC12IFG8: 
           break;
-          case ADC12IFG11: // check button flag
-
+          case ADC12IV_ADC12IFG9: 
           break;
-          case ADC12IFG12: // check button flag
-
+          case ADC12IV_ADC12IFG10: 
           break;
-          case ADC12IFG13: // check button flag
-
+          case ADC12IV_ADC12IFG11: 
           break;
-          case ADC12IFG14: // check button flag
-
+          case ADC12IV_ADC12IFG12: 
           break;
-          case ADC12IFG15: // check button flag
-
+          case ADC12IV_ADC12IFG13: 
           break;
          }
 }
