@@ -1,0 +1,33 @@
+
+SYMBOLS BY NAME
+
+    5c60 ISR        _ADC12_IR           
+    5c00 ISR        _Button_IR          
+    5d88 CODE       _DecrementVcore     
+    5e38 CODE       _IncrementVcore     
+    1c00            ___RAM_Address      
+    4000            ___RAM_Size         
+       0            ___begin_IDATA0     
+       0            ___begin_UDATA0     
+       0            ___end_IDATA0       
+       0            ___end_UDATA0       
+    5cf8 CODE       _main               
+    5eda CODE       _memcpy             
+    5eea CODE       _memset             
+
+
+SYMBOLS BY VALUE
+
+       0            ___begin_IDATA0     
+       0            ___begin_UDATA0     
+       0            ___end_IDATA0       
+       0            ___end_UDATA0       
+    1c00            ___RAM_Address      
+    4000            ___RAM_Size         
+    5c00 ISR        _Button_IR          
+    5c60 ISR        _ADC12_IR           
+    5cf8 CODE       _main               
+    5d88 CODE       _DecrementVcore     
+    5e38 CODE       _IncrementVcore     
+    5eda CODE       _memcpy             
+    5eea CODE       _memset             
