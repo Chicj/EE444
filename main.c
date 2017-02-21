@@ -50,7 +50,7 @@ ADC12_15V_85 = *(unsigned int *)0x1A1C;
 // ADC12 setup reg
   ADC12CTL0 |= ADC12ON + ADC12OVIE; // turn on ADC,set sample hold time to 1024,REF on
 
-  ADC12CTL1 |= ADC12SHP + ADC12SSEL_3 + ADC12CONSEQ_0; // use signal timer, use SMCLK, single conversion mode
+  ADC12CTL1 |= ADC12SHP + ADC12SSEL_3 + ADC12CONSEQ_1; // use signal timer, use SMCLK, single conversion mode
 
   ADC12IE |= ADC12IE0; // enable ADC12IE0 IR
 
@@ -109,7 +109,7 @@ void ADC12_IR(void) __interrupt[ADC12_VECTOR]{
           case ADC12IV_ADC12TOVIFG: // handle ADC conversion look at how these flags clear
           break;
           case 6://ADC12IV_ADC12IFG0: 
-            ADC12IFG=0; // reset the ADC flag 
+            ADC12IFG = 0; // reset the ADC flag 
             ADC12CTL0 ^= ADC12ENC + ADC12SC; // turn off conversion and SHI
 
               rawtemp[0] = ADC12MEM0; // save data

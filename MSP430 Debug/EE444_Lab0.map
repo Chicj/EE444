@@ -1,33 +1,39 @@
 
 SYMBOLS BY NAME
 
-    5c60 ISR        _ADC12_IR           
+    1c04 UDATA0     _ADC12_15V_30       
+    1c02 UDATA0     _ADC12_15V_85       
+    5c5c ISR        _ADC12_IR           
     5c00 ISR        _Button_IR          
-    5d88 CODE       _DecrementVcore     
-    5e38 CODE       _IncrementVcore     
+    5e1e CODE       _DecrementVcore     
+    5ece CODE       _IncrementVcore     
     1c00            ___RAM_Address      
     4000            ___RAM_Size         
-       0            ___begin_IDATA0     
-       0            ___begin_UDATA0     
-       0            ___end_IDATA0       
-       0            ___end_UDATA0       
-    5cf8 CODE       _main               
-    5eda CODE       _memcpy             
-    5eea CODE       _memset             
+    1c00            ___begin_IDATA0     
+    1c02            ___begin_UDATA0     
+    1c02            ___end_IDATA0       
+    1c06            ___end_UDATA0       
+    5d70 CODE       _main               
+    5f70 CODE       _memcpy             
+    5f80 CODE       _memset             
+    1c00 IDATA0     _sample             
 
 
 SYMBOLS BY VALUE
 
-       0            ___begin_IDATA0     
-       0            ___begin_UDATA0     
-       0            ___end_IDATA0       
-       0            ___end_UDATA0       
     1c00            ___RAM_Address      
+    1c00 IDATA0     _sample             
+    1c00            ___begin_IDATA0     
+    1c02            ___begin_UDATA0     
+    1c02            ___end_IDATA0       
+    1c02 UDATA0     _ADC12_15V_85       
+    1c04 UDATA0     _ADC12_15V_30       
+    1c06            ___end_UDATA0       
     4000            ___RAM_Size         
     5c00 ISR        _Button_IR          
-    5c60 ISR        _ADC12_IR           
-    5cf8 CODE       _main               
-    5d88 CODE       _DecrementVcore     
-    5e38 CODE       _IncrementVcore     
-    5eda CODE       _memcpy             
-    5eea CODE       _memset             
+    5c5c ISR        _ADC12_IR           
+    5d70 CODE       _main               
+    5e1e CODE       _DecrementVcore     
+    5ece CODE       _IncrementVcore     
+    5f70 CODE       _memcpy             
+    5f80 CODE       _memset             
