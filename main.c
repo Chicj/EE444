@@ -1,15 +1,18 @@
 #include <msp430.h>
-#include "hal_lcd.h"
+#include "hal_LCD.h"
 
 unsigned int ADC12_15V_30; //30 C temp reff look @ pg 92 datasheet 
 unsigned int ADC12_15V_85; //85 C temp reff
-volatile unsigned int *sample = 0; // var to hold temp data
+ 
+volatile float finaltempconverted;// var to hold final temp data
+
 
 void main(void)
 {
 //  Temp sensor calibration data (TVL)
 ADC12_15V_30 = *(unsigned int *)0x1A1A;
 ADC12_15V_85 = *(unsigned int *)0x1A1C;
+
 
 //***************************************************************Clock set up*****************************
 // set PM core to acceptable value for 16 MHz pg16 data sheet
@@ -48,11 +51,10 @@ ADC12_15V_85 = *(unsigned int *)0x1A1C;
 // change REFVSEL as needed. default 1.5V
 
 // ADC12 setup reg
-  ADC12CTL0 |= ADC12ON + ADC12OVIE; // turn on ADC,set sample hold time to 1024,REF on
+// turn on ADC,set sample hold time to 1024, multiple sample conversion, allow for 30 us btwn samples
+  ADC12CTL0 |= ADC12ON + ADC12OVIE + ADC12MSC + ADC12SHT0_10; 
 
   ADC12CTL1 |= ADC12SHP + ADC12SSEL_3 + ADC12CONSEQ_1; // use signal timer, use SMCLK, single conversion mode
-
-  ADC12IE |= ADC12IE0; // enable ADC12IE0 IR
 
   ADC12MCTL0 |= ADC12INCH_10 + ADC12SREF_1;  // read temp, set vref
   ADC12MCTL1 |= ADC12INCH_10 + ADC12SREF_1;  // read temp, set vref
@@ -63,13 +65,17 @@ ADC12_15V_85 = *(unsigned int *)0x1A1C;
   ADC12MCTL6 |= ADC12INCH_10 + ADC12SREF_1;  // read temp, set vref
   ADC12MCTL7 |= ADC12INCH_10 + ADC12SREF_1 + ADC12EOS;  // read temp, set vref , end of sequence
 
+  ADC12IE |= ADC12IE7; // enable ADC12IE0 IR
+
+
   _EINT();  // set global IR enable 
   while(1){
   }
 }
 
-//button IR code
+ //button IR code
 void Button_IR(void) __interrupt[PORT2_VECTOR]{
+int i=0 ,k=0;
         switch(P2IV)
         {
           case P2IV_NONE: 
@@ -93,38 +99,46 @@ void Button_IR(void) __interrupt[PORT2_VECTOR]{
              __no_operation(); // for debug 
               
           break; 
-          case P2IV_P2IFG7:// check button , SW2 on breakout board
+          case P2IV_P2IFG7:// check button , SW2 on breakout board 
+          
                P1DIR ^= BIT1;  // toggle LED when button push
+                  
+                  halLcdInit(); 
+                  halLcdBackLightInit();
+                  halLcdClearScreen();
+                  halLcdSetContrast(90);// ContrastLevel = 70 - 127
+                  halLcdSetBackLight(5); // BackLightLevel = 0 - 16                
+                  if (k==0){                           
+                     //for(i=0;i<5;i++)
+                    char myString[100];
+                    // sprintf(myString, "The temperature\n in the room is\n %d degrees C\n",finaltempconverted);
+                    sprintf(myString, " The Temperature in the room is %f degrees ",finaltempconverted);
+                    k=k+1;                 
+                    halLcdClearScreen();
+                    halLcdPrintXY(myString, 5, 5, GRAYSCALE_TEXT);                 
+                  }
+                  else if (k==1)
+                  {
+                    k=0;
+                    halLcdClearScreen();
+                    halLcdShutDownBackLight();
+                   }
           break; 
         }
 }
 
 // ADC IR code
 void ADC12_IR(void) __interrupt[ADC12_VECTOR]{
-  int i, rawtemp[8]; 
+  int i= 0; 
+  volatile float data30Cconverted ,data85Cconverted;
+  volatile unsigned int  sample = 0, rawtemp[8];
         switch(ADC12IV)
         {
           case ADC12IV_NONE: // ADC12IFGx flags are not reset by an ADC12IV access
           break;
           case ADC12IV_ADC12TOVIFG: // handle ADC conversion look at how these flags clear
           break;
-          case 6://ADC12IV_ADC12IFG0: 
-            ADC12IFG = 0; // reset the ADC flag 
-            ADC12CTL0 ^= ADC12ENC + ADC12SC; // turn off conversion and SHI
-
-              rawtemp[0] = ADC12MEM0; // save data
-              rawtemp[1] = ADC12MEM1; // save data
-              rawtemp[2] = ADC12MEM2; // save data
-              rawtemp[3] = ADC12MEM3; // save data
-              rawtemp[4] = ADC12MEM4; // save data
-              rawtemp[5] = ADC12MEM5; // save data
-              rawtemp[6] = ADC12MEM6; // save data
-              rawtemp[7] = ADC12MEM7; // save data
-
-            for(i;i<8;i++){ // populate data into global array 
-              sample = sample + rawtemp[i];
-            }
-
+          case ADC12IV_ADC12IFG0: 
           break;
           case ADC12IV_ADC12IFG1: 
           break;
@@ -139,6 +153,16 @@ void ADC12_IR(void) __interrupt[ADC12_VECTOR]{
           case ADC12IV_ADC12IFG6: 
           break;
           case ADC12IV_ADC12IFG7:
+
+            for(i;i<8;i++){ // sum all samples
+              sample += *(&ADC12MEM0 + i);// ADC12MEMx is a dereferenced pointer  
+              }
+            sample = sample>>3; // divide all samples to get an average, note this truncates the remainder
+            finaltempconverted = sample * 1.47/4096; // pg 82 fam 
+            data30Cconverted = ADC12_15V_30 * 1.5/4096;
+            data85Cconverted = ADC12_15V_85 * 1.5/4096; 
+            finaltempconverted = finaltempconverted - data30Cconverted; 
+            finaltempconverted = finaltempconverted / (data85Cconverted-data30Cconverted)*(85-30)+30;
           break;
           case ADC12IV_ADC12IFG8: 
           break;
