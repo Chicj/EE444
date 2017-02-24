@@ -1,4 +1,5 @@
 #include <msp430.h>
+#include <stdio.h>
 #include "hal_LCD.h"
 
 unsigned int ADC12_15V_30; //30 C temp reff look @ pg 92 datasheet 
@@ -66,16 +67,22 @@ ADC12_15V_85 = *(unsigned int *)0x1A1C;
   ADC12MCTL7 |= ADC12INCH_10 + ADC12SREF_1 + ADC12EOS;  // read temp, set vref , end of sequence
 
   ADC12IE |= ADC12IE7; // enable ADC12IE0 IR
-
+//*********************************************************** LCD setup *******************************
+  halLcdInit();// Init LCD 
+  halLcdClearScreen();  // clear LCD on start up 
+  halLcdBackLightInit();
+  halLcdSetBackLight(0); // BackLightLevel = 0 - 16
 
   _EINT();  // set global IR enable 
-  while(1){
-  }
+  while(1){};
+  //LPM0;
 }
 
  //button IR code
 void Button_IR(void) __interrupt[PORT2_VECTOR]{
-int i=0 ,k=0;
+ static int i=0 ,k=0;
+  char myString[100];
+
         switch(P2IV)
         {
           case P2IV_NONE: 
@@ -100,29 +107,28 @@ int i=0 ,k=0;
               
           break; 
           case P2IV_P2IFG7:// check button , SW2 on breakout board 
-          
                P1DIR ^= BIT1;  // toggle LED when button push
-                  
-                  halLcdInit(); 
-                  halLcdBackLightInit();
-                  halLcdClearScreen();
-                  halLcdSetContrast(90);// ContrastLevel = 70 - 127
-                  halLcdSetBackLight(5); // BackLightLevel = 0 - 16                
+
+                halLcdClearScreen();  // clear LCD on start up      
+                halLcdSetContrast(90);// ContrastLevel = 70 - 127
+
+                // note Crossworks dose not print floating point numbers unless you set it to in solution properties 
+                sprintf(myString, "Temp of the MSP is %2.2f degrees C",finaltempconverted); 
+                halLcdPrintXY(myString, 5, 5, GRAYSCALE_TEXT);    
                   if (k==0){                           
-                     //for(i=0;i<5;i++)
-                    char myString[100];
-                    // sprintf(myString, "The temperature\n in the room is\n %d degrees C\n",finaltempconverted);
-                    sprintf(myString, " The Temperature in the room is %f degrees ",finaltempconverted);
                     k=k+1;                 
-                    halLcdClearScreen();
-                    halLcdPrintXY(myString, 5, 5, GRAYSCALE_TEXT);                 
+                   // halLcdClearScreen();
+                    halLcdSetBackLight(16); // BackLightLevel = 0 - 16
+                                          __delay_cycles(1000000);
+
                   }
                   else if (k==1)
                   {
                     k=0;
-                    halLcdClearScreen();
-                    halLcdShutDownBackLight();
-                   }
+                    halLcdSetBackLight(0); // BackLightLevel = 0 - 16
+                                          __delay_cycles(1000000);
+
+                 }
           break; 
         }
 }

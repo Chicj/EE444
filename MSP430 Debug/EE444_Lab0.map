@@ -1,39 +1,175 @@
 
 SYMBOLS BY NAME
 
-    1c04 UDATA0     _ADC12_15V_30       
-    1c02 UDATA0     _ADC12_15V_85       
-    5c5c ISR        _ADC12_IR           
+    1c86 UDATA0     _ADC12_15V_30       
+    1c84 UDATA0     _ADC12_15V_85       
+    5cda ISR        _ADC12_IR           
     5c00 ISR        _Button_IR          
-    5e1e CODE       _DecrementVcore     
-    5ece CODE       _IncrementVcore     
+    71f4 CODE       _DecrementVcore     
+    1c74 IDATA0     _Draw_Block_Address_Macro
+    1c6e IDATA0     _Draw_Block_Value_Macro
+    67e0 CONST      _GrayScale_fonts    
+    72a4 CODE       _IncrementVcore     
+    1c88 UDATA0     _LCD_MEM            
+    1c7a IDATA0     _LcdAddress         
+    1c02 IDATA0     _LcdInitMacro       
+    1c7c IDATA0     _LcdTableAddress    
+    79c4 CODE       ___RAL_pow10        
     1c00            ___RAM_Address      
     4000            ___RAM_Size         
     1c00            ___begin_IDATA0     
-    1c02            ___begin_UDATA0     
-    1c02            ___end_IDATA0       
-    1c06            ___end_UDATA0       
-    5d70 CODE       _main               
-    5f70 CODE       _memcpy             
-    5f80 CODE       _memset             
-    1c00 IDATA0     _sample             
+    1c7f            ___begin_UDATA0     
+     4c0            ___crt_mpy          
+     4d2            ___crt_mpy32h       
+     4d0            ___crt_mpy32l       
+     4c8            ___crt_op2          
+     4e2            ___crt_op2h         
+     4e0            ___crt_op2l         
+     4e8            ___crt_res2         
+     4ea            ___crt_res3         
+     4ca            ___crt_reslo        
+    1c7f            ___end_IDATA0       
+    2b26            ___end_UDATA0       
+    8ca8 CODE       ___float32_add      
+    8e7e CODE       ___float32_div      
+    8f58 CODE       ___float32_eq       
+    8aa0 CODE       ___float32_isinf    
+    8aba CODE       ___float32_isnan    
+    8f3c CODE       ___float32_lt       
+    8da6 CODE       ___float32_mul      
+    8d9a CODE       ___float32_sub      
+    8bf6 CODE       ___float32_to_int64 
+    2b24 UDATA0     ___format_extender  
+    7044 CONST      ___hex_lc           
+    7034 CONST      ___hex_uc           
+    7814 CODE       ___int16_div        
+    783a CODE       ___int16_mod        
+    7860 CODE       ___int16_mul        
+    7876 CODE       ___int64_lsl        
+    7888 CODE       ___int64_lsr        
+    7a82 CODE       ___pre_padding      
+    7a64 CODE       ___print_padding    
+    7a1a CODE       ___putc             
+    7908 CODE       ___uint16_div       
+    8f68 CODE       ___uint16_to_float32
+    7920 CODE       ___uint32_div       
+    792a CODE       ___uint32_divmod    
+    7952 CODE       ___uint32_mod       
+    7960 CODE       ___uint64_div       
+    7988 CODE       ___uint64_divmod    
+    78e8 CODE       ___uint64_mod       
+    8ad2 CODE       ___uint64_to_float32
+    7b1c CODE       ___vfprintf         
+    7b1c CODE       ___vfprintf_float_long
+    7aac CODE       _abs                
+    1c7e IDATA0     _backlight          
+    1c80 UDATA0     _finaltempconverted 
+    5f8c CONST      _fonts              
+    5f02 CONST      _fonts_lookup       
+    8fce CODE       _frexp              
+    74ba CODE       _halLcdActive       
+    7418 CODE       _halLcdBackLightInit
+    75b8 CODE       _halLcdClearScreen  
+    7524 CODE       _halLcdDrawBlock    
+    753a CODE       _halLcdDrawCurrentBlock
+    7388 CODE       _halLcdInit         
+    7666 CODE       _halLcdPrint        
+    77e8 CODE       _halLcdPrintXY      
+    7346 CODE       _halLcdSendCommand  
+    74e2 CODE       _halLcdSetAddress   
+    7448 CODE       _halLcdSetBackLight 
+    7492 CODE       _halLcdSetContrast  
+    8f92 CODE       _ldexp              
+    7132 CODE       _main               
+    7aec CODE       _memcpy             
+    7afc CODE       _memset             
+    7abc CODE       _sprintf            
+    7b0c CODE       _strlen             
 
 
 SYMBOLS BY VALUE
 
+     4c0            ___crt_mpy          
+     4c8            ___crt_op2          
+     4ca            ___crt_reslo        
+     4d0            ___crt_mpy32l       
+     4d2            ___crt_mpy32h       
+     4e0            ___crt_op2l         
+     4e2            ___crt_op2h         
+     4e8            ___crt_res2         
+     4ea            ___crt_res3         
     1c00            ___RAM_Address      
-    1c00 IDATA0     _sample             
     1c00            ___begin_IDATA0     
-    1c02            ___begin_UDATA0     
-    1c02            ___end_IDATA0       
-    1c02 UDATA0     _ADC12_15V_85       
-    1c04 UDATA0     _ADC12_15V_30       
-    1c06            ___end_UDATA0       
+    1c02 IDATA0     _LcdInitMacro       
+    1c6e IDATA0     _Draw_Block_Value_Macro
+    1c74 IDATA0     _Draw_Block_Address_Macro
+    1c7a IDATA0     _LcdAddress         
+    1c7c IDATA0     _LcdTableAddress    
+    1c7e IDATA0     _backlight          
+    1c7f            ___begin_UDATA0     
+    1c7f            ___end_IDATA0       
+    1c80 UDATA0     _finaltempconverted 
+    1c84 UDATA0     _ADC12_15V_85       
+    1c86 UDATA0     _ADC12_15V_30       
+    1c88 UDATA0     _LCD_MEM            
+    2b24 UDATA0     ___format_extender  
+    2b26            ___end_UDATA0       
     4000            ___RAM_Size         
     5c00 ISR        _Button_IR          
-    5c5c ISR        _ADC12_IR           
-    5d70 CODE       _main               
-    5e1e CODE       _DecrementVcore     
-    5ece CODE       _IncrementVcore     
-    5f70 CODE       _memcpy             
-    5f80 CODE       _memset             
+    5cda ISR        _ADC12_IR           
+    5f02 CONST      _fonts_lookup       
+    5f8c CONST      _fonts              
+    67e0 CONST      _GrayScale_fonts    
+    7034 CONST      ___hex_uc           
+    7044 CONST      ___hex_lc           
+    7132 CODE       _main               
+    71f4 CODE       _DecrementVcore     
+    72a4 CODE       _IncrementVcore     
+    7346 CODE       _halLcdSendCommand  
+    7388 CODE       _halLcdInit         
+    7418 CODE       _halLcdBackLightInit
+    7448 CODE       _halLcdSetBackLight 
+    7492 CODE       _halLcdSetContrast  
+    74ba CODE       _halLcdActive       
+    74e2 CODE       _halLcdSetAddress   
+    7524 CODE       _halLcdDrawBlock    
+    753a CODE       _halLcdDrawCurrentBlock
+    75b8 CODE       _halLcdClearScreen  
+    7666 CODE       _halLcdPrint        
+    77e8 CODE       _halLcdPrintXY      
+    7814 CODE       ___int16_div        
+    783a CODE       ___int16_mod        
+    7860 CODE       ___int16_mul        
+    7876 CODE       ___int64_lsl        
+    7888 CODE       ___int64_lsr        
+    78e8 CODE       ___uint64_mod       
+    7908 CODE       ___uint16_div       
+    7920 CODE       ___uint32_div       
+    792a CODE       ___uint32_divmod    
+    7952 CODE       ___uint32_mod       
+    7960 CODE       ___uint64_div       
+    7988 CODE       ___uint64_divmod    
+    79c4 CODE       ___RAL_pow10        
+    7a1a CODE       ___putc             
+    7a64 CODE       ___print_padding    
+    7a82 CODE       ___pre_padding      
+    7aac CODE       _abs                
+    7abc CODE       _sprintf            
+    7aec CODE       _memcpy             
+    7afc CODE       _memset             
+    7b0c CODE       _strlen             
+    7b1c CODE       ___vfprintf_float_long
+    7b1c CODE       ___vfprintf         
+    8aa0 CODE       ___float32_isinf    
+    8aba CODE       ___float32_isnan    
+    8ad2 CODE       ___uint64_to_float32
+    8bf6 CODE       ___float32_to_int64 
+    8ca8 CODE       ___float32_add      
+    8d9a CODE       ___float32_sub      
+    8da6 CODE       ___float32_mul      
+    8e7e CODE       ___float32_div      
+    8f3c CODE       ___float32_lt       
+    8f58 CODE       ___float32_eq       
+    8f68 CODE       ___uint16_to_float32
+    8f92 CODE       _ldexp              
+    8fce CODE       _frexp              
