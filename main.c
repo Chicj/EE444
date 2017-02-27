@@ -137,7 +137,7 @@ void Button_IR(void) __interrupt[PORT2_VECTOR]{
 void ADC12_IR(void) __interrupt[ADC12_VECTOR]{
   int i= 0; 
   volatile float data30Cconverted ,data85Cconverted;
-  volatile unsigned int  sample = 0, rawtemp[8];
+  volatile unsigned int  sample = 0;
         switch(ADC12IV)
         {
           case ADC12IV_NONE: // ADC12IFGx flags are not reset by an ADC12IV access
