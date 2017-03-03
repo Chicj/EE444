@@ -1,6 +1,9 @@
 #include <msp430.h>
 #include <stdio.h>
 
+extern int IncrementVcore(void);
+extern int DecrementVcore(void);
+
 unsigned int ADC12_15V_30; //30 C temp reff look @ pg 92 datasheet 
 unsigned int ADC12_15V_85; //85 C temp reff
  
@@ -66,14 +69,53 @@ ADC12_15V_85 = *(unsigned int *)0x1A1C;
   ADC12MCTL7 |= ADC12INCH_10 + ADC12SREF_1 + ADC12EOS;  // read temp, set vref , end of sequence
 
   ADC12IE |= ADC12IE7; // enable ADC12IE0 IR
+//************************************************************* UART setup (UCA1)
+//UART mode is selected when the UCSYNC bit is cleared. configure or reconfigure the USCI_A module only when UCSWRST is set.
+
+  //UCA1CTL0 ---> UART settings parity enable | LSB | 8 bit data | one stop bit  
+  UCA1CTL0 |= UCPEN;
+  UCA1CTL1 |= UCSSEL__SMCLK + UCBRKIE + UCSWRST; // USCI clk set to SMCLK,transmit a break with the next write to the transmit buffer, Enable USCI logic held in reset state.
+
+  UCA1BR0 = 0x2; // Low byte of clk prescaler (UCAxBR0 +UCAxBRO1 * 256) values from setup table pg 954 fam
+  UCA1MCTL |= UCBRS_3 + UCBRF_2; //values from setup table pg 954 fam
+  
+  UCA1IE |= UCTXIE + UCRXIE; // enable TX and RX IR for UART on UCA1
+  //UCA1CTL1 |= ~UCSWRST; // lock reg/enable UART  NOTE: UCSWRST is 1 by default 
+  // Enable oversampling mode over sampling on pg 950 fam 
+  UCA1STAT |= UCLISTEN + UCFE + UCOE + UCPE + UCRXERR;
+
 
   _EINT();  // set global IR enable 
   while(1){};
   //LPM0;
 }
 
+// UCA1 UART interrupt service routine 
+void USB_IR(void) __interrupt[USCI_A1_VECTOR]{
+
+  switch(UCA1IV){
+    case  USCI_NONE:
+    break;
+    case  USCI_UCRXIFG:
+      P1DIR != BIT0;  // latch LED on RX
+      while(!(UCA0IFG & UCTXIFG)); 
+      UCA0TXBUF = UCA0RXBUF;
+    break;
+    case  USCI_UCTXIFG:
+    break;
+    case  USCI_I2C_UCSTTIFG:
+    break;
+    case  USCI_I2C_UCSTPIFG:
+    break;
+    case  USCI_I2C_UCRXIFG:
+    break;
+    case USCI_I2C_UCTXIFG:
+    break;
+  }
+}
+
  //button IR code
-void Button_IR(void) __interrupt[PORT2_VECTOR]{
+  void Button_IR(void) __interrupt[PORT2_VECTOR]{
  static int i=0 ,k=0;
   char myString[100];
 
@@ -162,3 +204,4 @@ void ADC12_IR(void) __interrupt[ADC12_VECTOR]{
           break;
          }
 }
+
