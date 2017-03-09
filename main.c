@@ -9,6 +9,15 @@ unsigned int ADC12_15V_85; //85 C temp reff
  
 volatile float finaltempconverted;// var to hold final temp data
 
+// UART global constants
+const unsigned char *UART_TX_Buffer;
+unsigned char UART_TX_Index;
+unsigned char UART_TX_Length;
+unsigned char UART_TX_Pkt_Complete;
+
+unsigned char UART_RX_Buffer[25];
+unsigned char UART_RX_Pkt_Complete;
+unsigned char UART_RX_Index;
 
 void main(void)
 {
@@ -45,8 +54,11 @@ ADC12_15V_85 = *(unsigned int *)0x1A1C;
   P1DIR |= BIT0 + BIT1;  // Set LED High on start up   
 
   //P5.0/A8/VREF+/VeREF+
-  P5SEL |= BIT0;  // select Peripheral module mode 
+  P5SEL |= BIT0;  // select Peripheral module mode for UART 
   P5DIR |= BIT0;
+
+  // P5.6 - UCA1TXD, P5.7 UCA1RXD
+  P5SEL |= BIT6|BIT7;//UCA1STE|UCA1TXD|UCA1RXD
 
 //*************************************************************** ADC setup *****************************
 // when using the ADC to sample internal temp sensor sample time must be greater then 30 us
@@ -70,36 +82,40 @@ ADC12_15V_85 = *(unsigned int *)0x1A1C;
 
   ADC12IE |= ADC12IE7; // enable ADC12IE0 IR
 //************************************************************* UART setup (UCA1)
-//UART mode is selected when the UCSYNC bit is cleared. configure or reconfigure the USCI_A module only when UCSWRST is set.
+  //SET UP UART 
+   UCA1CTL0   |= UCPEN;// --> a good idea but works w/out
+   //selected parity enable |odd parity| LSB| 8 bit| one stop bit| UART| async mode
 
-  //UCA1CTL0 ---> UART settings parity enable | LSB | 8 bit data | one stop bit  
-  UCA1CTL0 |= UCPEN;
-  UCA1CTL1 |= UCSSEL__SMCLK + UCBRKIE + UCSWRST; // USCI clk set to SMCLK,transmit a break with the next write to the transmit buffer, Enable USCI logic held in reset state.
+  UCA1CTL1   |= UCSSEL__SMCLK|UCSWRST;
+  // use SMCLK| no  erroneous RX will IR| break chars do no IR| not in sleep mode (UCDORM)| next frame transmitted is data| next frame transmitted is not a break| software rest enabled 
 
-  UCA1BR0 = 0x2; // Low byte of clk prescaler (UCAxBR0 +UCAxBRO1 * 256) values from setup table pg 954 fam
-  UCA1MCTL |= UCBRS_3 + UCBRF_2; //values from setup table pg 954 fam
-  
-  UCA1IE |= UCTXIE + UCRXIE; // enable TX and RX IR for UART on UCA1
-  //UCA1CTL1 |= ~UCSWRST; // lock reg/enable UART  NOTE: UCSWRST is 1 by default 
-  // Enable oversampling mode over sampling on pg 950 fam 
-  UCA1STAT |= UCLISTEN + UCFE + UCOE + UCPE + UCRXERR;
+  //Set UART bit rate from pg 955 fam guide "commonly used baud rate settings"  
+  UCA1BR0 = 2;
 
+  // Modulation control register pg 951 fam guide 
+  //17MHZ/460800 = 36.89 = 32 + 4.89 = 2*16 + 4 + .89*8 = 7.12 = 7 
+  UCA1MCTL |= UCBRF_4|UCBRS_7|UCOS16; //<-- why does this work ???? | enabled oversampling mode 
 
+  UCA1CTL1   &= ~UCSWRST; // enable UART lock UART settings 
+
+  UCA1IE |= UCRXIE; // Enable RX interrupts 
+ 
   _EINT();  // set global IR enable 
   while(1){};
   //LPM0;
 }
 
 // UCA1 UART interrupt service routine 
-void USB_IR(void) __interrupt[USCI_A1_VECTOR]{
-
+void UART_IR(void) __interrupt[USCI_A1_VECTOR]{
+  
   switch(UCA1IV){
     case  USCI_NONE:
     break;
     case  USCI_UCRXIFG:
-      P1DIR != BIT0;  // latch LED on RX
-      while(!(UCA0IFG & UCTXIFG)); 
-      UCA0TXBUF = UCA0RXBUF;
+      P1DIR |= BIT0;  // latch LED on RX
+      while(!(UCA0IFG & UCTXIFG)); {
+      UCA1TXBUF = UCA1RXBUF;
+      }
     break;
     case  USCI_UCTXIFG:
     break;
