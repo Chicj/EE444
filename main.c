@@ -9,16 +9,6 @@ unsigned int ADC12_15V_85; //85 C temp reff
  
 volatile float finaltempconverted;// var to hold final temp data
 
-// UART global constants
-const unsigned char *UART_TX_Buffer;
-unsigned char UART_TX_Index;
-unsigned char UART_TX_Length;
-unsigned char UART_TX_Pkt_Complete;
-
-unsigned char UART_RX_Buffer[25];
-unsigned char UART_RX_Pkt_Complete;
-unsigned char UART_RX_Index;
-
 void main(void)
 {
 //  Temp sensor calibration data (TVL)
@@ -107,14 +97,24 @@ ADC12_15V_85 = *(unsigned int *)0x1A1C;
 
 // UCA1 UART interrupt service routine 
 void UART_IR(void) __interrupt[USCI_A1_VECTOR]{
-  
+  unsigned char i;
+  unsigned int rxbuff[3];
+
   switch(UCA1IV){
     case  USCI_NONE:
     break;
     case  USCI_UCRXIFG:
       P1DIR |= BIT0;  // latch LED on RX
       while(!(UCA0IFG & UCTXIFG)); {
-      UCA1TXBUF = UCA1RXBUF;
+
+        UCA1TXBUF = UCA1RXBUF;  // loop chars back to term
+        for(i=0;i<5;i++){ // save UART char to rxbuff
+          rxbuff[i]=UCA1RXBUF;
+          i++;
+        }
+        if(!strcomp(rxbuff, "temp")){
+          
+        }
       }
     break;
     case  USCI_UCTXIFG:
