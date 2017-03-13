@@ -1,0 +1,58 @@
+    32d0f000            BIS.W     #0x00f0, R2
+    ff3f                JMP       0x00004
+    fffedfdf            AND.B     @R14+, 0xdfdf(R15)
+    fe7ef7ff            SUBC.B    @R14+, 0xfff7(R14)
+    7ff7                AND.B     @R7+, R15
+    eafbe5fb            AND.B     @R11, 0xfbe5(R10)
+    fd7f7b6f            SUBC.B    @R15+, 0x6f7b(R13)
+    bb7fbec9            SUBC.W    @R15+, 0xc9be(R11)
+    ddb6eefd32d0        BIT.B     0xfdee(R6), 0xd032(R13)
+    f000                SUBA      PC, PC
+    ff3f                JMP       0x00024
+    fffedfdf            AND.B     @R14+, 0xdfdf(R15)
+    fe7ef7ff            SUBC.B    @R14+, 0xfff7(R14)
+    7ff7                AND.B     @R7+, R15
+    eafbe5fb            AND.B     @R11, 0xfbe5(R10)
+    fd7f7b6f            SUBC.B    @R15+, 0x6f7b(R13)
+    bb7fbec9            SUBC.W    @R15+, 0xc9be(R11)
+    ddb6eefd32d0        BIT.B     0xfdee(R6), 0xd032(R13)
+    f000                SUBA      PC, PC
+    ff3f                JMP       0x00044
+    fffedfdf            AND.B     @R14+, 0xdfdf(R15)
+    fe7ef7ff            SUBC.B    @R14+, 0xfff7(R14)
+    7ff7                AND.B     @R7+, R15
+    eafbe5fb            AND.B     @R11, 0xfbe5(R10)
+    fd7f7b6f            SUBC.B    @R15+, 0x6f7b(R13)
+    bb7fbec9            SUBC.W    @R15+, 0xc9be(R11)
+    ddb6eefd32d0        BIT.B     0xfdee(R6), 0xd032(R13)
+    f000                SUBA      PC, PC
+    ff3f                JMP       0x00064
+    fffedfdf            AND.B     @R14+, 0xdfdf(R15)
+    fe7ef7ff            SUBC.B    @R14+, 0xfff7(R14)
+    7ff7                AND.B     @R7+, R15
+    eafbe5fb            AND.B     @R11, 0xfbe5(R10)
+    fd7f7b6f            SUBC.B    @R15+, 0x6f7b(R13)
+    bb7fbec9            SUBC.W    @R15+, 0xc9be(R11)
+    ddb6eefd32d0        BIT.B     0xfdee(R6), 0xd032(R13)
+    f000                SUBA      PC, PC
+    ff3f                JMP       0x00084
+    fffedfdf            AND.B     @R14+, 0xdfdf(R15)
+    fe7ef7ff            SUBC.B    @R14+, 0xfff7(R14)
+    7ff7                AND.B     @R7+, R15
+    eafbe5fb            AND.B     @R11, 0xfbe5(R10)
+    fd7f7b6f            SUBC.B    @R15+, 0x6f7b(R13)
+    bb7fbec9            SUBC.W    @R15+, 0xc9be(R11)
+    ddb6eefd32d0        BIT.B     0xfdee(R6), 0xd032(R13)
+    f000                SUBA      PC, PC
+    ff3f                JMP       0x000a4
+    fffedfdf            AND.B     @R14+, 0xdfdf(R15)
+    fe7ef7ff            SUBC.B    @R14+, 0xfff7(R14)
+    7ff7                AND.B     @R7+, R15
+    eafbe5fb            AND.B     @R11, 0xfbe5(R10)
+    fd7f7b6f            SUBC.B    @R15+, 0x6f7b(R13)
+    bb7fbec9            SUBC.W    @R15+, 0xc9be(R11)
+    ddb6eefd32d0        BIT.B     0xfdee(R6), 0xd032(R13)
+    f000                SUBA      PC, PC
+    ff3f                JMP       0x000c4
+    fffedfdf            AND.B     @R14+, 0xdfdf(R15)
+    fe7ef7ff            SUBC.B    @R14+, 0xfff7(R14)

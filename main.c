@@ -1,11 +1,13 @@
 #include <msp430.h>
 #include <stdio.h>
+#include <string.h>
 
 extern int IncrementVcore(void);
 extern int DecrementVcore(void);
 
 unsigned int ADC12_15V_30; //30 C temp reff look @ pg 92 datasheet 
 unsigned int ADC12_15V_85; //85 C temp reff
+unsigned int globali=0;   //global counter
  
 volatile float finaltempconverted;// var to hold final temp data
 
@@ -38,12 +40,13 @@ ADC12_15V_85 = *(unsigned int *)0x1A1C;
 // set SMCLK to 17 MHz (default SELREF for FLLREFCLK is XT1CLK = 32*1024 = 32768 Hz = 32.768 KHz)
   UCSCTL2 = 511;               // Setting the freq multiplication factor * 32768 for final clk freq @ 16744448 Hz
   UCSCTL1 |= DCORSEL_4;        // This sets the DCO frequency pg26 data sheet 12.3 -- 28.3 MHz
-  UCSCTL4 |= SELS__DCOCLKDIV ; // set output of FLLREFCLK --> DCOCLKDIV to input of SMCLK  <-- This is default 
+  //TODO look at this . 
+  UCSCTL4 |= SELS__DCOCLKDIV + SELA_0; // set output of FLLREFCLK --> DCOCLKDIV to input of SMCLK | setup ACLK 
 
 //*************************************************************** pin set up ***************************
   // setup breakout board MCLK and SMCLK test pins for scope testing
-  P11DIR  |= BIT2;  // Set Port 11 pin 2 direction as an output
-  P11SEL |= BIT2;   // Set port 11 pin 2 as SMCLK signal
+  P11DIR  |= BIT2 + BIT3;  // Set Port 11 pin 2 direction as an output
+  P11SEL |= BIT2 + BIT3;   // Set port 11 pin 2 as SMCLK signal pin 3 as ACLK
 
   //setting up pins for SW1 --> P2.6
   P2REN |= BIT6 + BIT7;  // turn on internal resistor to combat bounce (this pulls down)
@@ -94,11 +97,15 @@ ADC12_15V_85 = *(unsigned int *)0x1A1C;
 
   // Modulation control register pg 951 fam guide 
   //17MHZ/460800 = 36.89 = 32 + 4.89 = 2*16 + 4 + .89*8 = 7.12 = 7 
-  UCA1MCTL |= UCBRF_4|UCBRS_7|UCOS16; //<-- why does this work ???? | enabled oversampling mode 
+  UCA1MCTL |= UCBRF_4|UCBRS_7|UCOS16; //set modulation | enabled oversampling mode 
 
   UCA1CTL1   &= ~UCSWRST; // enable UART lock UART settings 
 
   UCA1IE |= UCRXIE; // Enable RX interrupts 
+//************************************************************ setup timer for the ADC
+  TA0CTL |= TASSEL_1|ID_1|MC_0; //USE ACLK|OFFMODE
+  TA0CCTL0 |= CCIE;
+  TA0CCR0 = 16420;//measured clock, ACLK = 32.84 kHz, used half that value to make a more accurate clock
  
   _EINT();  // set global IR enable 
   while(1){};
@@ -107,25 +114,31 @@ ADC12_15V_85 = *(unsigned int *)0x1A1C;
 
 // UCA1 UART interrupt service routine 
 void UART_IR(void) __interrupt[USCI_A1_VECTOR]{
-  
+  char rxbuff[4]; // save UART input data 
+
   switch(UCA1IV){
-    case  USCI_NONE:
-    break;
     case  USCI_UCRXIFG:
       P1DIR |= BIT0;  // latch LED on RX
       while(!(UCA0IFG & UCTXIFG)); {
-      UCA1TXBUF = UCA1RXBUF;
-      }
-    break;
-    case  USCI_UCTXIFG:
-    break;
-    case  USCI_I2C_UCSTTIFG:
-    break;
-    case  USCI_I2C_UCSTPIFG:
-    break;
-    case  USCI_I2C_UCRXIFG:
-    break;
-    case USCI_I2C_UCTXIFG:
+          UCA1TXBUF = UCA1RXBUF;  // loop input chars back to terminal 
+
+          if(globali<3){
+            rxbuff[globali]=UCA1RXBUF; // save UART into buffer to check for "temp" or "stop"
+            globali++;                 // increment buffer counter
+          }
+          else{
+           rxbuff[globali] = UCA1RXBUF; // save UART into buffer to check for "temp" or "stop"
+           globali = 0;                 // reset buffer
+          }
+
+          // check input string 
+          if(!strcmp(rxbuff,"TEMP") || !strcmp(rxbuff,"temp")){
+            TA0CTL ^= MC_1; // trigger timer --> ADC conversion  
+          }
+          else if(!strcmp(rxbuff,"STOP") || !strcmp(rxbuff,"stop")){
+            TA0CTL ^= MC_1; // stop timer --> ADC conversion 
+          }
+       }
     break;
   }
 }
@@ -137,20 +150,6 @@ void UART_IR(void) __interrupt[USCI_A1_VECTOR]{
 
         switch(P2IV)
         {
-          case P2IV_NONE: 
-          break; 
-          case P2IV_P2IFG0:
-          break; 
-          case P2IV_P2IFG1: 
-          break; 
-          case P2IV_P2IFG2: 
-          break; 
-          case P2IV_P2IFG3: 
-          break; 
-          case P2IV_P2IFG4:
-          break; 
-          case P2IV_P2IFG5: 
-          break; 
           case P2IV_P2IFG6: // check button flag, SW1 on breakout board
              P1DIR ^= BIT0;  // toggle LED when button push
 
@@ -176,24 +175,6 @@ void ADC12_IR(void) __interrupt[ADC12_VECTOR]{
   volatile unsigned int  sample = 0;
         switch(ADC12IV)
         {
-          case ADC12IV_NONE: // ADC12IFGx flags are not reset by an ADC12IV access
-          break;
-          case ADC12IV_ADC12TOVIFG: // handle ADC conversion look at how these flags clear
-          break;
-          case ADC12IV_ADC12IFG0: 
-          break;
-          case ADC12IV_ADC12IFG1: 
-          break;
-          case ADC12IV_ADC12IFG2: 
-          break;
-          case ADC12IV_ADC12IFG3: 
-          break;
-          case ADC12IV_ADC12IFG4: 
-          break;
-          case ADC12IV_ADC12IFG5: 
-          break;
-          case ADC12IV_ADC12IFG6: 
-          break;
           case ADC12IV_ADC12IFG7:
 
             for(i;i<8;i++){ // sum all samples
@@ -206,18 +187,13 @@ void ADC12_IR(void) __interrupt[ADC12_VECTOR]{
             finaltempconverted = finaltempconverted - data30Cconverted; 
             finaltempconverted = finaltempconverted / (data85Cconverted-data30Cconverted)*(85-30)+30;
           break;
-          case ADC12IV_ADC12IFG8: 
-          break;
-          case ADC12IV_ADC12IFG9: 
-          break;
-          case ADC12IV_ADC12IFG10: 
-          break;
-          case ADC12IV_ADC12IFG11: 
-          break;
-          case ADC12IV_ADC12IFG12: 
-          break;
-          case ADC12IV_ADC12IFG13: 
-          break;
          }
+}
+
+void TIMER_A0_ISR(void)__interrupt[TIMER0_A0_VECTOR]
+{
+ //start making temperature measurent every 2x per sec.
+ P1OUT ^=BIT0; 
+  ADC12CTL0 ^= ADC12ENC|ADC12SC;//enables ADC conversion and turns off shi
 }
 
