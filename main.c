@@ -11,6 +11,8 @@ unsigned int globali=0;   //global counter
  
 volatile float finaltempconverted;// var to hold final temp data
 
+char mystring[20]; // save ADC data
+
 void main(void)
 {
 //  Temp sensor calibration data (TVL)
@@ -30,7 +32,6 @@ ADC12_15V_85 = *(unsigned int *)0x1A1C;
 // set SMCLK to 17 MHz (default SELREF for FLLREFCLK is XT1CLK = 32*1024 = 32768 Hz = 32.768 KHz)
   UCSCTL2 = 511;               // Setting the freq multiplication factor * 32768 for final clk freq @ 16744448 Hz
   UCSCTL1 |= DCORSEL_4;        // This sets the DCO frequency pg26 data sheet 12.3 -- 28.3 MHz
-  //TODO look at this . 
   UCSCTL4 |= SELS__DCOCLKDIV + SELA_0; // set output of FLLREFCLK --> DCOCLKDIV to input of SMCLK | setup ACLK 
 
 //*************************************************************** pin set up ***************************
@@ -93,9 +94,9 @@ ADC12_15V_85 = *(unsigned int *)0x1A1C;
 
   UCA1IE |= UCRXIE; // Enable RX interrupts 
 //************************************************************ setup timer for the ADC
-  TA0CTL |= TASSEL_1|ID_1|MC_0; //USE ACLK|OFFMODE
-  TA0CCTL0 |= CCIE;
-  TA0CCR0 = 16420;//measured clock, ACLK = 32.84 kHz, used half that value to make a more accurate clock
+  TA0CTL |= TASSEL_1|MC_0; // use ACLK | 
+  TA0CCTL1 |= CCIE; // enables interrupts on capture compare mode 
+  TA0CCR1 = 16384;  //measured clock, ACLK = 32.84 kHz, used half that value to make a more accurate clock
  
   _EINT();  // set global IR enable 
   while(1){};
@@ -105,55 +106,35 @@ ADC12_15V_85 = *(unsigned int *)0x1A1C;
 // UCA1 UART interrupt service routine 
 void UART_IR(void) __interrupt[USCI_A1_VECTOR]{
   char rxbuff[4]; // save UART input data 
-  unsigned char i;
+       globali=0;   // set counter to 0
 
   switch(UCA1IV){
     case  USCI_UCRXIFG:
       P1DIR |= BIT0;  // latch LED on RX
       while(!(UCA0IFG & UCTXIFG)); {
-          UCA1TXBUF = UCA1RXBUF;  // loop input chars back to terminal 
+        //save UART input
+            rxbuff[globali]=UCA1RXBUF;    // save UART into buffer to check for "temp" or "stop"
+            UCA1TXBUF = rxbuff[globali];  // loop input chars back to terminal 
+          
+          if(rxbuff[globali] == '\n'){ // check input string 
+            UCA1TXBUF = '\n';   // start a new line
+
+            if(!strcmp(rxbuff,"TEMP") || !strcmp(rxbuff,"temp")){
+              TA0CTL |= MC_1; // trigger timer --> ADC conversion  
+            }
+            else if(!strcmp(rxbuff,"STOP") || !strcmp(rxbuff,"stop")){
+              TA0CTL &= ~MC_1; // stop timer --> ADC conversion 
+           }
+          } 
 
           if(globali<3){
-            rxbuff[globali]=UCA1RXBUF; // save UART into buffer to check for "temp" or "stop"
-            globali++;                 // increment buffer counter
+            globali++;       // increment buffer counter
           }
           else{
-           rxbuff[globali] = UCA1RXBUF; // save UART into buffer to check for "temp" or "stop"
-           globali = 0;                 // reset buffer
-          }
-
-          // check input string 
-          if(!strcmp(rxbuff,"TEMP") || !strcmp(rxbuff,"temp")){
-            TA0CTL ^= MC_1; // trigger timer --> ADC conversion  
-          }
-          else if(!strcmp(rxbuff,"STOP") || !strcmp(rxbuff,"stop")){
-            TA0CTL ^= MC_1; // stop timer --> ADC conversion 
+           globali = 0;      // reset buffer
           }
        }
-  }
-}
-
- //button IR code
-  void Button_IR(void) __interrupt[PORT2_VECTOR]{
- static int i=0 ,k=0;
-  char myString[100];
-
-        switch(P2IV)
-        {
-          case P2IV_P2IFG6: // check button flag, SW1 on breakout board
-             P1DIR ^= BIT0;  // toggle LED when button push
-
-             ADC12CTL0 ^= ADC12ENC + ADC12SC;  // enable conversion,start conversion
-             __no_operation(); // for debug 
-              
-          break; 
-          case P2IV_P2IFG7:// check button , SW2 on breakout board 
-               P1DIR ^= BIT1;  // toggle LED when button push
-
-                // note Crossworks dose not print floating point numbers unless you set it to in solution properties 
-                sprintf(myString, "Temp of the MSP is %2.2f degrees C",finaltempconverted); 
-          break; 
-        }
+   }
 }
 
 // ADC IR code
@@ -174,14 +155,30 @@ void ADC12_IR(void) __interrupt[ADC12_VECTOR]{
             data85Cconverted = ADC12_15V_85 * 1.5/4096; 
             finaltempconverted = finaltempconverted - data30Cconverted; 
             finaltempconverted = finaltempconverted / (data85Cconverted-data30Cconverted)*(85-30)+30;
+
+            // note Crossworks dose not print floating point numbers unless you set it to in solution properties 
+            sprintf(mystring, "Temp of the MSP is %2.2f degrees C. \n\r",finaltempconverted); // populate string for UART Tx | sprintf ends with a null 
+
+            i = 0;  // set counter to 0
+            while(mystring[i] != '\0'){ // single quotes tells the loops to look at a char "\0" <-- is a string (*char) ! '\0' <-- char
+              UCA1TXBUF = mystring[i]; // clock out ADC temp string 
+              i++;
+            }
           break;
          }
 }
 
 void TIMER_A0_ISR(void)__interrupt[TIMER0_A0_VECTOR]
 {
- //start making temperature measurent every 2x per sec.
- P1OUT ^=BIT0; 
-  ADC12CTL0 ^= ADC12ENC|ADC12SC;//enables ADC conversion and turns off shi
+  switch(TA0IV){
+    case TA0IV_TA0CCR1:    // TA0IV_TA0CCR0 <--   DOSENT EXIST ?!?!?!?!??!? 
+      //start making temperature measurent every 2x per sec.
+      P1OUT ^=BIT0; 
+      TA0CCR0 += 16384; // for a one second timer
+      ADC12CTL0 ^= ADC12ENC|ADC12SC;//enables ADC conversion and turns off shi
+    break;
+    default:
+    break;
+   }
 }
 
