@@ -11,16 +11,6 @@ unsigned int globali=0;   //global counter
  
 volatile float finaltempconverted;// var to hold final temp data
 
-// UART global constants
-const unsigned char *UART_TX_Buffer;
-unsigned char UART_TX_Index;
-unsigned char UART_TX_Length;
-unsigned char UART_TX_Pkt_Complete;
-
-unsigned char UART_RX_Buffer[25];
-unsigned char UART_RX_Pkt_Complete;
-unsigned char UART_RX_Index;
-
 void main(void)
 {
 //  Temp sensor calibration data (TVL)
@@ -114,12 +104,18 @@ ADC12_15V_85 = *(unsigned int *)0x1A1C;
 
 // UCA1 UART interrupt service routine 
 void UART_IR(void) __interrupt[USCI_A1_VECTOR]{
+<<<<<<< HEAD
   char rxbuff[4]; // save UART input data 
+=======
+  unsigned char i;
+  unsigned int rxbuff[3];
+>>>>>>> c11d5e1e30c6e78f56fb038b00db77be2eadce8b
 
   switch(UCA1IV){
     case  USCI_UCRXIFG:
       P1DIR |= BIT0;  // latch LED on RX
       while(!(UCA0IFG & UCTXIFG)); {
+<<<<<<< HEAD
           UCA1TXBUF = UCA1RXBUF;  // loop input chars back to terminal 
 
           if(globali<3){
@@ -139,6 +135,28 @@ void UART_IR(void) __interrupt[USCI_A1_VECTOR]{
             TA0CTL ^= MC_1; // stop timer --> ADC conversion 
           }
        }
+=======
+
+        UCA1TXBUF = UCA1RXBUF;  // loop chars back to term
+        for(i=0;i<5;i++){ // save UART char to rxbuff
+          rxbuff[i]=UCA1RXBUF;
+          i++;
+        }
+        if(!strcomp(rxbuff, "temp")){
+          
+        }
+      }
+    break;
+    case  USCI_UCTXIFG:
+    break;
+    case  USCI_I2C_UCSTTIFG:
+    break;
+    case  USCI_I2C_UCSTPIFG:
+    break;
+    case  USCI_I2C_UCRXIFG:
+    break;
+    case USCI_I2C_UCTXIFG:
+>>>>>>> c11d5e1e30c6e78f56fb038b00db77be2eadce8b
     break;
   }
 }
