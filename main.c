@@ -7,11 +7,14 @@ extern int DecrementVcore(void);
 
 unsigned int ADC12_15V_30; //30 C temp reff look @ pg 92 datasheet 
 unsigned int ADC12_15V_85; //85 C temp reff
-unsigned int globali=0;   //global counter
+unsigned int globali=1;   //global counter
  
 volatile float finaltempconverted;// var to hold final temp data
 
-char mystring[20]; // save ADC data
+char mystring[50];  // save ADC data
+char rxbuff[42];     // save UART input data [make this arbitrarily large]
+char taketempstr[] = "Taking temp data.\r\n";  // print string on temp cmnd
+char stopstr[] = "Stopped taking temp data.\r\n";
 
 void main(void)
 {
@@ -79,25 +82,20 @@ ADC12_15V_85 = *(unsigned int *)0x1A1C;
   //SET UP UART 
    UCA1CTL0   |= UCPEN;// --> a good idea but works w/out
    //selected parity enable |odd parity| LSB| 8 bit| one stop bit| UART| async mode
-
   UCA1CTL1   |= UCSSEL__SMCLK|UCSWRST;
   // use SMCLK| no  erroneous RX will IR| break chars do no IR| not in sleep mode (UCDORM)| next frame transmitted is data| next frame transmitted is not a break| software rest enabled 
-
   //Set UART bit rate from pg 955 fam guide "commonly used baud rate settings"  
   UCA1BR0 = 2;
-
   // Modulation control register pg 951 fam guide 
   //17MHZ/460800 = 36.89 = 32 + 4.89 = 2*16 + 4 + .89*8 = 7.12 = 7 
-  UCA1MCTL |= UCBRF_4|UCBRS_7|UCOS16; //set modulation | enabled oversampling mode 
-
-  UCA1CTL1   &= ~UCSWRST; // enable UART lock UART settings 
-
+  UCA1MCTL  |= UCBRF_4|UCBRS_7|UCOS16; //set modulation | enabled oversampling mode <-- note UCBRF 5 dosent work when using DCORSEL_4
+  UCA1CTL1  &= ~UCSWRST; // enable UART lock UART settings 
   UCA1IE |= UCRXIE; // Enable RX interrupts 
 //************************************************************ setup timer for the ADC
-  TA0CTL |= TASSEL_1|MC_0; // use ACLK | 
+  TA0CTL |= TASSEL_1|MC_0; // use ACLK | stop mode
   TA0CCTL1 |= CCIE; // enables interrupts on capture compare mode 
-  TA0CCR1 = 16384;  //measured clock, ACLK = 32.84 kHz, used half that value to make a more accurate clock
- 
+  TA0CCR1 = 16384;  //set ACLK capture point, ACLK = 32.84 kHz, used half that value to make a more accurate clock
+
   _EINT();  // set global IR enable 
   while(1){};
   //LPM0;
@@ -105,35 +103,53 @@ ADC12_15V_85 = *(unsigned int *)0x1A1C;
 
 // UCA1 UART interrupt service routine 
 void UART_IR(void) __interrupt[USCI_A1_VECTOR]{
-  char rxbuff[4]; // save UART input data 
-       globali=0;   // set counter to 0
 
   switch(UCA1IV){
     case  USCI_UCRXIFG:
       P1DIR |= BIT0;  // latch LED on RX
-      while(!(UCA0IFG & UCTXIFG)); {
         //save UART input
-            rxbuff[globali]=UCA1RXBUF;    // save UART into buffer to check for "temp" or "stop"
-            UCA1TXBUF = rxbuff[globali];  // loop input chars back to terminal 
-          
-          if(rxbuff[globali] == '\n'){ // check input string 
-            UCA1TXBUF = '\n';   // start a new line
+            rxbuff[globali-1]=UCA1RXBUF;    // save UART into buffer to check for "temp" or "stop"
+            UCA1TXBUF = rxbuff[globali-1];  // loop input chars back to terminal 
+            while(!(UCA1IFG & UCTXIFG));  // delay for UART TX
 
-            if(!strcmp(rxbuff,"TEMP") || !strcmp(rxbuff,"temp")){
-              TA0CTL |= MC_1; // trigger timer --> ADC conversion  
+          if(rxbuff[globali-1] == '\r' ||rxbuff[globali-1] == '\n'){ // check input string for enter 
+            UCA1TXBUF = '\n';             // start a new line
+            while(!(UCA1IFG & UCTXIFG));  // delay for UART TX
+
+            sprintf(mystring, "The number of chars entered is %i. \n\r",globali-1); // populate string for UART char count | sprintf ends with a null 
+            
+            globali = 0;        // reset global counter       
+            while(mystring[globali] != '\0'){ //print # of chars input 
+              UCA1TXBUF = mystring[globali]; // spit out # of entered chars
+              while(!(UCA1IFG & UCTXIFG));  // delay for UART TX
+              globali++;  // increment counter
             }
-            else if(!strcmp(rxbuff,"STOP") || !strcmp(rxbuff,"stop")){
-              TA0CTL &= ~MC_1; // stop timer --> ADC conversion 
-           }
-          } 
+            globali=0;  // reset global counter 
 
-          if(globali<3){
-            globali++;       // increment buffer counter
+            if(!strcmp(rxbuff,"TEMP\r") || !strcmp(rxbuff,"temp\r")){ // check for temp
+            
+            globali = 0;        // reset global counter       
+            while(taketempstr[globali] != '\0'){ //print starting message for temp measure 
+              UCA1TXBUF = taketempstr[globali]; 
+              while(!(UCA1IFG & UCTXIFG));  // delay for UART TX
+              globali++;  // increment counter
+            }
+            globali=0;  // reset global counter <-- this will count time until "stop"
+
+              TA0CTL |= MC__CONTINOUS; // start timer --> ADC conversion  
+            }
+            else if(!strcmp(rxbuff,"STOP\r") || !strcmp(rxbuff,"stop\r")){  // check for stop
+              globali = 0;        // reset global counter       
+              while(stopstr[globali] != '\0'){ //print starting message for temp measure 
+              UCA1TXBUF = taketempstr[globali]; 
+              while(!(UCA1IFG & UCTXIFG));  // delay for UART TX
+              globali++;  // increment counter
+              }
+              globali=0;  // reset global counter 
+              TA0CTL &= ~MC__CONTINOUS; // stop timer --> ADC conversion 
+            }
           }
-          else{
-           globali = 0;      // reset buffer
-          }
-       }
+        globali++;  // increment counter
    }
 }
 
@@ -157,24 +173,27 @@ void ADC12_IR(void) __interrupt[ADC12_VECTOR]{
             finaltempconverted = finaltempconverted / (data85Cconverted-data30Cconverted)*(85-30)+30;
 
             // note Crossworks dose not print floating point numbers unless you set it to in solution properties 
-            sprintf(mystring, "Temp of the MSP is %2.2f degrees C. \n\r",finaltempconverted); // populate string for UART Tx | sprintf ends with a null 
+            // populate string for UART Tx | sprintf ends with a null 
+            sprintf(mystring, "Temp of the MSP is %2.2f degrees C. \n\rTime: %i min and %i sec\r\n",finaltempconverted,globali/60,globali%60); 
 
             i = 0;  // set counter to 0
             while(mystring[i] != '\0'){ // single quotes tells the loops to look at a char "\0" <-- is a string (*char) ! '\0' <-- char
               UCA1TXBUF = mystring[i]; // clock out ADC temp string 
-              i++;
+              while(!(UCA1IFG & UCTXIFG));  // delay for UART TX
+              i++; // increment counter
             }
           break;
          }
 }
 
-void TIMER_A0_ISR(void)__interrupt[TIMER0_A0_VECTOR]
+void TIMER_A0_ISR(void)__interrupt[TIMER0_A1_VECTOR]
 {
   switch(TA0IV){
-    case TA0IV_TA0CCR1:    // TA0IV_TA0CCR0 <--   DOSENT EXIST ?!?!?!?!??!? 
-      //start making temperature measurent every 2x per sec.
-      P1OUT ^=BIT0; 
-      TA0CCR0 += 16384; // for a one second timer
+    case TA0IV_TA0CCR1:    // dont use TA0IV_TA0CCR0 
+      //start making temperature measurments every 2x per sec.
+      P1OUT ^=BIT0; // blink a led
+      TA0CCR1 += 16384; // for a one second timer
+      globali++;  // increment for time info 
       ADC12CTL0 ^= ADC12ENC|ADC12SC;//enables ADC conversion and turns off shi
     break;
     default:
