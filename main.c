@@ -5,9 +5,7 @@
 extern int IncrementVcore(void);
 extern int DecrementVcore(void);
 
-unsigned int ADC12_15V_30; //30 C temp reff look @ pg 92 datasheet 
-unsigned int ADC12_15V_85; //85 C temp reff
-unsigned int globali=1;   //global counter
+unsigned int ADC12_15V_30, ADC12_15V_85,seconds=0, globali =0; //30 C temp reff, 85 C temp reff look @ pg 92 datasheet 
  
 volatile float finaltempconverted;// var to hold final temp data
 
@@ -108,15 +106,16 @@ void UART_IR(void) __interrupt[USCI_A1_VECTOR]{
     case  USCI_UCRXIFG:
       P1DIR |= BIT0;  // latch LED on RX
         //save UART input
-            rxbuff[globali-1]=UCA1RXBUF;    // save UART into buffer to check for "temp" or "stop"
-            UCA1TXBUF = rxbuff[globali-1];  // loop input chars back to terminal 
+            rxbuff[globali]=UCA1RXBUF;    // save UART into buffer to check for "temp" or "stop"
+            UCA1TXBUF = rxbuff[globali];  // loop input chars back to terminal 
+            rxbuff[globali+1] = NULL;         // make sure the rxbuff ends with a null 
             while(!(UCA1IFG & UCTXIFG));  // delay for UART TX
 
-          if(rxbuff[globali-1] == '\r' ||rxbuff[globali-1] == '\n'){ // check input string for enter 
+          if(rxbuff[globali] == '\r' ||rxbuff[globali] == '\n'){ // check input string for enter 
             UCA1TXBUF = '\n';             // start a new line
             while(!(UCA1IFG & UCTXIFG));  // delay for UART TX
 
-            sprintf(mystring, "The number of chars entered is %i. \n\r",globali-1); // populate string for UART char count | sprintf ends with a null 
+            sprintf(mystring, "The number of chars entered is %i. \n\r",globali); // populate string for UART char count | sprintf ends with a null 
             
             globali = 0;        // reset global counter       
             while(mystring[globali] != '\0'){ //print # of chars input 
@@ -128,7 +127,6 @@ void UART_IR(void) __interrupt[USCI_A1_VECTOR]{
 
             if(!strcmp(rxbuff,"TEMP\r") || !strcmp(rxbuff,"temp\r")){ // check for temp
             
-            globali = 0;        // reset global counter       
             while(taketempstr[globali] != '\0'){ //print starting message for temp measure 
               UCA1TXBUF = taketempstr[globali]; 
               while(!(UCA1IFG & UCTXIFG));  // delay for UART TX
@@ -141,15 +139,18 @@ void UART_IR(void) __interrupt[USCI_A1_VECTOR]{
             else if(!strcmp(rxbuff,"STOP\r") || !strcmp(rxbuff,"stop\r")){  // check for stop
               globali = 0;        // reset global counter       
               while(stopstr[globali] != '\0'){ //print starting message for temp measure 
-              UCA1TXBUF = taketempstr[globali]; 
+              UCA1TXBUF = stopstr[globali]; 
               while(!(UCA1IFG & UCTXIFG));  // delay for UART TX
               globali++;  // increment counter
               }
               globali=0;  // reset global counter 
               TA0CTL &= ~MC__CONTINOUS; // stop timer --> ADC conversion 
+              seconds=0;  // reset timer counter
             }
           }
-        globali++;  // increment counter
+          else{
+            globali++;  // increment counter
+          }
    }
 }
 
@@ -174,7 +175,7 @@ void ADC12_IR(void) __interrupt[ADC12_VECTOR]{
 
             // note Crossworks dose not print floating point numbers unless you set it to in solution properties 
             // populate string for UART Tx | sprintf ends with a null 
-            sprintf(mystring, "Temp of the MSP is %2.2f degrees C. \n\rTime: %i min and %i sec\r\n",finaltempconverted,globali/60,globali%60); 
+            sprintf(mystring, "Temp of the MSP is %2.2f degrees C. \n\rTime: %i min and %i sec\r\n",finaltempconverted,seconds/60,seconds%60); 
 
             i = 0;  // set counter to 0
             while(mystring[i] != '\0'){ // single quotes tells the loops to look at a char "\0" <-- is a string (*char) ! '\0' <-- char
@@ -193,7 +194,7 @@ void TIMER_A0_ISR(void)__interrupt[TIMER0_A1_VECTOR]
       //start making temperature measurments every 2x per sec.
       P1OUT ^=BIT0; // blink a led
       TA0CCR1 += 16384; // for a one second timer
-      globali++;  // increment for time info 
+      seconds++;  // increment for time info 
       ADC12CTL0 ^= ADC12ENC|ADC12SC;//enables ADC conversion and turns off shi
     break;
     default:
