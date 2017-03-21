@@ -1,0 +1,37 @@
+
+SYMBOLS BY NAME
+
+    1c00            ___RAM_Address      
+    4000            ___RAM_Size         
+       0            ___begin_IDATA0     
+       0            ___begin_THREAD     
+    1c00            ___begin_UDATA0     
+       0            ___end_IDATA0       
+       0            ___end_THREAD       
+    1c02            ___end_UDATA0       
+    5c00 ISR        _button_interrupt   
+    5c8e CODE       _main               
+    5ce8 CODE       _memcpy             
+    5cf8 CODE       _memset             
+    1c00 UDATA0     _state              
+    5c8e CONST      thread_init_begin   
+    5c8e CONST      thread_init_end     
+
+
+SYMBOLS BY VALUE
+
+       0            ___begin_IDATA0     
+       0            ___begin_THREAD     
+       0            ___end_IDATA0       
+       0            ___end_THREAD       
+    1c00            ___RAM_Address      
+    1c00            ___begin_UDATA0     
+    1c00 UDATA0     _state              
+    1c02            ___end_UDATA0       
+    4000            ___RAM_Size         
+    5c00 ISR        _button_interrupt   
+    5c8e CONST      thread_init_end     
+    5c8e CODE       _main               
+    5c8e CONST      thread_init_begin   
+    5ce8 CODE       _memcpy             
+    5cf8 CODE       _memset             
