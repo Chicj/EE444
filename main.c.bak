@@ -4,7 +4,7 @@
 extern int IncrementVcore(void);
 extern int DecrementVcore(void);
 
-enum  {AM=0,PM0,PM1,PM2,PM3,PM4}; // list power modes 
+enum  {AM=0,PM0,PM1,PM2,PM3}; // list power modes 
 unsigned int state; // keep track of power mode 
 
 void main(void)
@@ -38,11 +38,8 @@ void main(void)
       else if (state == PM2){
         LPM2;  /* Enter Low Power Mode 2 */
       }
-      else if {
-        LPM3;   /* Enter Low Power Mode 3 */ // we seem not to go into LPM3 ?? 
-      }
       else{
-        LPM4;  /* Enter Low Power Mode 4 */
+        LPM3;   /* Enter Low Power Mode 3 */ // we seem not to go into LPM3 ?? 
       }
     }
 }
@@ -59,22 +56,19 @@ void button_interrupt(void) __interrupt[PORT2_VECTOR]{
         LPM0_EXIT;  /* Exit Low Power Mode 0 */
         state++; // increment state to go into LMP1
       }
-      else if (state == PM1){
+            else if (state == PM1){
         LPM1_EXIT;  /* Exit Low Power Mode 1 */
         state++; // increment state to go into LMP2
       }
-      else if (state == PM2){
+            else if (state == PM2){
         LPM2_EXIT;  /* Exit Low Power Mode 2 */
         state++; // increment state to go into LMP3
       }
-      else if{
+      else{
         LPM3_EXIT;  /* Exit Low Power Mode 3 */
         state = 0; // return state to AM 
       }
-      else{
-        LPM4_EXIT;  /* Exit Low Power Mode 4 */
-        state = 0; // return state to AM 
-      }
+      
 
     break;
 
