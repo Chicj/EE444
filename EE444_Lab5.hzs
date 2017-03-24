@@ -1,4 +1,4 @@
-<!DOCTYPE CrossStudio_for_MSP430_Session_File>
+<!DOCTYPE CrossStudio_Session_File>
 <session>
  <Bookmarks/>
  <Breakpoints>
@@ -17,6 +17,9 @@
  </EEMTriggerSequencerWindow>
  <EEMTriggersWindow/>
  <ExecutionProfileWindow/>
+ <FrameBufferWindow>
+  <FrameBufferWindow addressText="" bufferWidth="-1" bufferHeight="-1" addressSpace="" />
+ </FrameBufferWindow>
  <Memory1>
   <MemoryWindow autoEvaluate="0" addressText="" numColumns="8" sizeText="" dataSize="1" radix="16" name="EE444_Lab0" addressSpace="" />
  </Memory1>
@@ -31,18 +34,20 @@
  </Memory4>
  <Project>
   <ProjectSessionItem path="EE444_Lab0" name="unnamed" />
+  <ProjectSessionItem path="EE444_Lab0;EE444_Lab0" name="unnamed" />
+  <ProjectSessionItem path="EE444_Lab0;EE444_Lab0;Source Files" name="unnamed" />
  </Project>
  <Register1>
-  <RegisterWindow openNodes="CPU Registers" binaryNodes="" hiddenNodes="" unsignedNodes="" visibleGroups="" decimalNodes="" octalNodes="" asciiNodes="" name="EE444_Lab0" />
+  <RegisterWindow openNodes="CPU Registers" binaryNodes="" unsignedNodes="" decimalNodes="" octalNodes="" asciiNodes="" visibleNodes="" name="EE444_Lab0" />
  </Register1>
  <Register2>
-  <RegisterWindow openNodes="CPU Registers" binaryNodes="" hiddenNodes="" unsignedNodes="" visibleGroups="" decimalNodes="" octalNodes="" asciiNodes="" name="EE444_Lab0" />
+  <RegisterWindow openNodes="CPU Registers" binaryNodes="" unsignedNodes="" decimalNodes="" octalNodes="" asciiNodes="" visibleNodes="" name="EE444_Lab0" />
  </Register2>
  <Register3>
-  <RegisterWindow openNodes="CPU Registers" binaryNodes="" hiddenNodes="" unsignedNodes="" visibleGroups="" decimalNodes="" octalNodes="" asciiNodes="" name="EE444_Lab0" />
+  <RegisterWindow openNodes="CPU Registers" binaryNodes="" unsignedNodes="" decimalNodes="" octalNodes="" asciiNodes="" visibleNodes="" name="EE444_Lab0" />
  </Register3>
  <Register4>
-  <RegisterWindow openNodes="CPU Registers" binaryNodes="" hiddenNodes="" unsignedNodes="" visibleGroups="" decimalNodes="" octalNodes="" asciiNodes="" name="EE444_Lab0" />
+  <RegisterWindow openNodes="CPU Registers" binaryNodes="" unsignedNodes="" decimalNodes="" octalNodes="" asciiNodes="" visibleNodes="" name="EE444_Lab0" />
  </Register4>
  <TargetWindow programAction="" uploadFileType="" programLoadAddress="" programSize="" uploadFileName="" uploadMemoryInterface="" programFileName="" uploadStartAddress="" programFileType="" uploadSize="" programMemoryInterface="" />
  <TraceWindow>
@@ -63,7 +68,7 @@
   <Watches active="0" update="Never" />
  </Watch4>
  <Files>
-  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Latin1" x="7" debugPath="main.c" y="36" path="main.c" left="0" selected="1" name="unnamed" top="15" />
+  <SessionOpenFile useTextEdit="1" useBinaryEdit="0" codecName="Default" x="54" debugPath="C:/Users/cjodell2/Desktop/EE444/main.c" y="8" path="C:/Users/cjodell2/Desktop/EE444/main.c" left="0" selected="1" name="unnamed" top="63" />
  </Files>
  <MSP430CrossStudioWindow activeProject="EE444_Lab0" autoConnectTarget="MSP-FET430UIF(V3)" debugSearchFileMap="" fileDialogInitialDirectory="" fileDialogDefaultFilter="*.c" autoConnectCapabilities="528255" debugSearchPath="" buildConfiguration="MSP430 Debug" />
 </session>
