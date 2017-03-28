@@ -8,6 +8,7 @@ unsigned int globalcounter = 0;
 
 enum  {AM=0,PM0,PM1,PM2,PM3,PM4}; // list power modes 
 unsigned int state; // keep track of power mode 
+#define count 62500;
 
 void main(void)
 {
@@ -27,11 +28,14 @@ void main(void)
 
 //************************************************************** Clock setup****************************
   UCSCTL1 = DCORSEL_2; // selects DCO btwn 2.5 and 54 MHz
-  UCSCTL2 = 30;       // for 1 MHZ clkc
+  //UCSCTL2 = 30;       // for 1 MHZ clkc
+  UCSCTL2 = 239;       // for 8 MHZ clkc
   UCSCTL4 = SELA_0|SELS_3|SELM_3;//SELA_0 SELECTS XT1|SELS_3 SELECTS DCO| SELM_3 CHOOSES THE DCOCLK
   UCSCTL8 |=SMCLKREQEN|MCLKREQEN|ACLKREQEN;//THINGS WILL BE OFF UNLESS SOMETHING SPECIFICALLY NEEDS THE CLOCK
   //SET UP TIMER 
-  TA0CTL |= TASSEL_2|TAIE|MC_0;//SET TIMER A TO USE SMCLK|INTTERUPT ENABLED|AND TIMER IS OFF
+  TA0CTL = TASSEL__SMCLK + ID__8;// use SMCLK at 1MHz in cont. mode 
+  TA0CCTL1 = CCIE;              // enable interrupts from the timer
+  TA0CCR1 = count;              // set capture compare reg
 
 
    state = AM;// set starting state
@@ -50,38 +54,24 @@ void main(void)
         LPM2;  /* Enter Low Power Mode 2 */
       }
       else if (state == PM3){
-        LPM3;   /* Enter Low Power Mode 3 */ // we seem not to go into LPM3 ?? 
+        LPM3;   /* Enter Low Power Mode 3 */
       }
       else if (state == PM4){
         LPM4;  /* Enter Low Power Mode 4 */
       }
-    }
+   }
 }
 
-void TIMERA0_ISR(void)__interrupt[TIMER0_A1_VECTOR]
+void TimerA (void) __interrupt [TIMER0_A1_VECTOR] {
+  switch (TA0IV) {
+    case TA0IV_TA0CCR1:
+      P5OUT ^= BIT0;          // Toggle P5.0
+      TA0CCR1 += count;  // increment after we reach count val
+      break;
 
-  {
-    switch(TA0IV)
-      {
-      case 14:
-        {
-        globalcounter++;
-        if(TA0CTL==(TASSEL_2|TAIE|MC_2))
-        {
-        if (globalcounter < 500)
-        { 
-         P1OUT |= BIT0;
-        }
-        else 
-        {
-          P1OUT = 0;
-        }
-
-        }
-      }
-
-
-  } 
+    default:
+      break;
+  }
 }
 
 void button_interrupt(void) __interrupt[PORT2_VECTOR]{
@@ -114,7 +104,16 @@ void button_interrupt(void) __interrupt[PORT2_VECTOR]{
 
     break;
 
-    case P2IV_P2IFG7: // sw2 flag 
+    case P2IV_P2IFG7:                   // sw2
+      if (TA0CTL & MC__CONTINUOUS) {      // Toggle timer on/off
+        TA0CTL &= ~MC__CONTINUOUS;
+        TA0CTL |= TACLR;
+        TA0CCR1 = count;
+      }
+      else {
+        TA0CTL |= MC__CONTINUOUS;
+      }
+    break;
 
     break;
 

@@ -1,41 +1,39 @@
 
 SYMBOLS BY NAME
 
-    5c00 ISR        _TIMERA0_ISR        
+    5c00 ISR        _TimerA             
     1c00            ___RAM_Address      
     4000            ___RAM_Size         
-    1c00            ___begin_IDATA0     
+       0            ___begin_IDATA0     
        0            ___begin_THREAD     
-    1c02            ___begin_UDATA0     
-    1c02            ___end_IDATA0       
+    1c00            ___begin_UDATA0     
+       0            ___end_IDATA0       
        0            ___end_THREAD       
-    1c04            ___end_UDATA0       
-    5c30 ISR        _button_interrupt   
-    1c00 IDATA0     _globalcounter      
-    5ce2 CODE       _main               
-    5d6e CODE       _memcpy             
-    5d7e CODE       _memset             
-    1c02 UDATA0     _state              
-    5ce2 CONST      thread_init_begin   
-    5ce2 CONST      thread_init_end     
+    1c02            ___end_UDATA0       
+    5c1e ISR        _button_interrupt   
+    5ce0 CODE       _main               
+    5d78 CODE       _memcpy             
+    5d88 CODE       _memset             
+    1c00 UDATA0     _state              
+    5ce0 CONST      thread_init_begin   
+    5ce0 CONST      thread_init_end     
 
 
 SYMBOLS BY VALUE
 
+       0            ___begin_IDATA0     
        0            ___begin_THREAD     
+       0            ___end_IDATA0       
        0            ___end_THREAD       
     1c00            ___RAM_Address      
-    1c00            ___begin_IDATA0     
-    1c00 IDATA0     _globalcounter      
-    1c02            ___begin_UDATA0     
-    1c02 UDATA0     _state              
-    1c02            ___end_IDATA0       
-    1c04            ___end_UDATA0       
+    1c00            ___begin_UDATA0     
+    1c00 UDATA0     _state              
+    1c02            ___end_UDATA0       
     4000            ___RAM_Size         
-    5c00 ISR        _TIMERA0_ISR        
-    5c30 ISR        _button_interrupt   
-    5ce2 CODE       _main               
-    5ce2 CONST      thread_init_end     
-    5ce2 CONST      thread_init_begin   
-    5d6e CODE       _memcpy             
-    5d7e CODE       _memset             
+    5c00 ISR        _TimerA             
+    5c1e ISR        _button_interrupt   
+    5ce0 CONST      thread_init_end     
+    5ce0 CODE       _main               
+    5ce0 CONST      thread_init_begin   
+    5d78 CODE       _memcpy             
+    5d88 CODE       _memset             
